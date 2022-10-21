@@ -1,0 +1,87 @@
+CREATE DATABASE IF NOT EXISTS db_tugas_praktikum;
+USE db_tugas_praktikum;
+CREATE TABLE IF NOT EXISTS tabel_mahasiswa
+(Nim VARCHAR(7) PRIMARY KEY NOT NULL,
+Nama VARCHAR(50) NOT NULL,
+Jenis_Kelamin ENUM("P","L"),
+Alamat VARCHAR (20));
+
+INSERT INTO tabel_mahasiswa VALUES
+("101", "Arif", "L", "jl. Kenangan"),
+("102", "Budi", "L", "jl. Jombang"),
+("103", "Wati", "P", "jl. Surabaya"),
+("104", "Ika", "P", "jl. Jombang"),
+("105", "Tono", "L", "jl. Jakarta"),
+("106", "Iwan", "L", "jl. Bandung"),
+("107", "Sari", "P", "jl. Malang");
+
+CREATE TABLE IF NOT EXISTS tabel_ambil_mk 
+(Nim VARCHAR(7) NOT NULL,
+kode_mk VARCHAR(8) NOT NULL); 
+
+INSERT INTO `tabel_ambil_mk` 
+(`Nim`, `kode_mk`) VALUES 
+('101', 'PTI447'), 
+('103', 'TIK333'), 
+('104', 'PTI333'), 
+('104', 'PTI777'), 
+('107', 'PTI123'), 
+('106', 'TIK123'); 
+
+CREATE TABLE  IF NOT EXISTS tabel_matakuliah
+(kode_mk VARCHAR(8) PRIMARY KEY NOT NULL,
+nama_mk VARCHAR(100) NOT NULL,
+sks CHAR(1) NOT NULL,
+semester CHAR(1) NOT NULL);
+
+INSERT INTO `tabel_matakuliah` 
+(`kode_mk`, `nama_mk`, `sks`, `semester`) VALUES 
+('PTI447', 'Praktikum Basis Data', '1', '3'),
+('TIK342', 'Praktikum Basis Data', '1', '3'),
+('PTI333', 'Basis Data Terdistribusi', '3', '5'),
+('TIK123', 'Jaringan Komputer', '2', '5'),
+('TIK333', 'Sistem Operasi', '3', '5'),
+('PTI123', 'Grafika Multimedia', '3', '5'),
+('PTI777', 'Sistem Informasi', '2', '3');
+
+1.Select count(distinct tabel_mahasiswa.Nim) 
+as mahasiswa_yang_mengambil_matkul 
+from tabel_mahasiswa INNER JOIN tabel_ambil_mk 
+ON tabel_mahasiswa.Nim = tabel_ambil_mk.Nim;
+
+//eksplisit
+Select count(distinct tabel_mahasiswa.Nim) 
+as mahasiswa_yang_mengambil_matkul 
+from tabel_mahasiswa INNER JOIN tabel_ambil_mk 
+ON tabel_mahasiswa.Nim = tabel_ambil_mk.Nim;
+//implisit
+Select count(distinct tabel_mahasiswa.Nim) 
+as mahasiswa_yang_mengambil_matkul 
+from tabel_mahasiswa, tabel_ambil_mk 
+WHERE tabel_mahasiswa.Nim = tabel_ambil_mk.Nim;
+
+2.SELECT tabel_mahasiswa.jenis_kelamin, COUNT(tabel_mahasiswa.jenis_kelamin) AS jumlah 
+FROM tabel_mahasiswa LEFT OUTER JOIN tabel_ambil_mk ON tabel_mahasiswa.nim = tabel_ambil_mk.nim 
+WHERE tabel_ambil_mk.nim IS NULL
+GROUP BY tabel_mahasiswa.jenis_kelamin;
+
+3.//implisit
+SELECT tabel_mahasiswa.nim, tabel_mahasiswa.nama, tabel_matakuliah.kode_mk, tabel_matakuliah.nama_mk
+FROM tabel_mahasiswa, tabel_matakuliah, tabel_ambil_mk
+WHERE tabel_mahasiswa.nim = tabel_ambil_mk.nim AND tabel_ambil_mk.kode_mk = tabel_matakuliah.kode_mk;
+//eksplisit
+SELECT tabel_mahasiswa.nim, tabel_mahasiswa.nama, tabel_matakuliah.kode_mk, tabel_matakuliah.nama_mk
+FROM tabel_mahasiswa INNER JOIN tabel_ambil_mk
+ON tabel_mahasiswa.nim = tabel_ambil_mk.nim INNER JOIN tabel_matakuliah ON tabel_ambil_mk.kode_mk = tabel_matakuliah.kode_mk;
+
+4.SELECT tabel_mahasiswa.Nim, Nama, SUM(sks) AS jumlah_sks FROM tabel_mahasiswa 
+INNER JOIN (tabel_matakuliah INNER JOIN tabel_ambil_mk 
+ON tabel_matakuliah.kode_mk = tabel_ambil_mk.kode_mk) 
+ON tabel_mahasiswa.Nim = tabel_ambil_mk.Nim 
+GROUP BY Nama HAVING SUM(sks)>4 AND SUM(sks)<10
+
+5.SELECT tabel_matakuliah.kode_mk, nama_mk, sks, semester FROM tabel_matakuliah 
+LEFT OUTER JOIN (tabel_mahasiswa LEFT OUTER JOIN tabel_ambil_mk 
+ON tabel_mahasiswa.Nim = tabel_ambil_mk.Nim) 
+ON tabel_matakuliah.kode_mk = tabel_ambil_mk.kode_mk 
+WHERE tabel_mahasiswa.Nim IS NULL
